@@ -8,7 +8,7 @@ const handler = (req, res) => {
   if (!res.socket.server.io) {
     const io = new Server(res.socket.server);
     io.on('connection', (socket) => {
-      console.log(`connection from ID: ${socket.id}`);
+      console.log(`connection to socket from ID: ${socket.id}`);
       // https://medium.com/@sergeisizov/using-recaptcha-v3-with-node-js-6a4b7bc67209
       // https://developers.google.com/recaptcha/docs/v3
       // https://www.google.com/recaptcha/admin/create
@@ -24,9 +24,26 @@ const handler = (req, res) => {
               console.log(`human click registered with score: ${json.score}`);
           });
       });
+      socket.on('googleSignIn', (arg) => {
+        // https://developers.google.com/identity/sign-in/web/backend-auth
+        const { OAuth2Client } = require('google-auth-library');
+        const client = new OAuth2Client(consts.oAuth2_client_ID);
+        async function verify() {
+          const ticket = await client.verifyIdToken({
+            idToken: arg.token,
+            audience: consts.oAuth2_client_ID,
+          });
+          const payload = ticket.getPayload();
+          const userid = payload['sub'];
+          console.log(
+            `user logged into google with ID: ${socket.id} ${userid}`
+          );
+        }
+        verify().catch(console.error);
+      });
     });
     io.on('disconnect', (socket) => {
-      console.log(`disconnected from ID: ${socket.id}`);
+      console.log(`disconnected from socket with ID: ${socket.id}`);
     });
 
     res.socket.server.io = io;

@@ -4,19 +4,20 @@ import NextHead from 'next/head';
 import Button from '../components/Button';
 import consts from '../components/consts';
 import styles from '../styles/index.module.css';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 import io from 'socket.io-client';
 
 export default () => {
-  var socket;
+  var socket = {};
   useEffect(() => {
     fetch('/api/socketio').finally(() => {
-      socket = io();
-      socket.on('connect', () => {
-        console.log(`connected with ID: ${socket.id}`);
+      socket.socket = io();
+      socket.socket.on('connect', () => {
+        console.log(`connected to socket with ID: ${socket.id}`);
       });
-      socket.on('disconnect', () => {
-        console.log(`disconnected`);
+      socket.socket.on('disconnect', () => {
+        console.log(`disconnected from socket`);
       });
     });
   });
@@ -25,7 +26,7 @@ export default () => {
     grecaptcha.ready(() => {
       grecaptcha
         .execute(consts.reCAPTCHA_site_key, { action: 'updateClicks' })
-        .then((token) => socket.emit('updateClicks', { token: token }));
+        .then((token) => socket.socket.emit('updateClicks', { token: token }));
     });
   };
 
@@ -58,11 +59,24 @@ export default () => {
         <script
           src={`https://www.google.com/recaptcha/api.js?render=${consts.reCAPTCHA_site_key}`}
         ></script>
+        {/* https://developers.google.com/identity/sign-in/web/sign-in */}
+        {/* https://stackoverflow.com/questions/42566296/google-api-authentication-not-valid-origin-for-the-client */}
+        {/* https://stackoverflow.com/questions/31610461/using-google-sign-in-button-with-react */}
+        <script
+          src="https://apis.google.com/js/platform.js"
+          async
+          defer
+        ></script>
+        <meta
+          name="google-signin-client_id"
+          content={consts.oAuth2_client_ID}
+        ></meta>
       </NextHead>
       <div className={styles.Index}>
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
         <Button onClick={updateClicks}>Cookie</Button>
+        <GoogleLoginButton socket={socket} />
       </div>
     </React.Fragment>
   );
