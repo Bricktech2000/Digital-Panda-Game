@@ -1,5 +1,9 @@
 # Best Practices
 
+## Overall
+
+- use 2 spaces for tab everywhere please
+
 ## JavaScript
 
 - arrow functions `() => {}` instead of plain `function`s
