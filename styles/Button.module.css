@@ -1,0 +1,11 @@
+.Button {
+  padding: 0.75em 1em;
+  margin: 1em;
+  border-radius: 0.5em;
+  background: #08f;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  align-self: flex-start;
+  cursor: pointer;
+}

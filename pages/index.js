@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
 import React from 'react';
 import NextHead from 'next/head';
+import Button from '../components/Button';
+import consts from '../components/consts';
 import styles from '../styles/index.module.css';
 
 import io from 'socket.io-client';
 
 export default () => {
+  var socket;
   useEffect(() => {
     fetch('/api/socketio').finally(() => {
-      const socket = io();
+      socket = io();
       socket.on('connect', () => {
         console.log(`connected with ID: ${socket.id}`);
       });
@@ -17,6 +20,15 @@ export default () => {
       });
     });
   });
+  const updateClicks = () => {
+    console.log('click registered');
+    grecaptcha.ready(() => {
+      grecaptcha
+        .execute(consts.reCAPTCHA_site_key, { action: 'updateClicks' })
+        .then((token) => socket.emit('updateClicks', { token: token }));
+    });
+  };
+
   return (
     <React.Fragment>
       <NextHead>
@@ -42,10 +54,15 @@ export default () => {
           href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300;400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
+        {/* https://developers.google.com/recaptcha/docs/v3 */}
+        <script
+          src={`https://www.google.com/recaptcha/api.js?render=${consts.reCAPTCHA_site_key}`}
+        ></script>
       </NextHead>
       <div className={styles.Index}>
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
+        <Button onClick={updateClicks}>Cookie</Button>
       </div>
     </React.Fragment>
   );
