@@ -4,7 +4,23 @@ import consts from '../../components/consts';
 // https://www.youtube.com/watch?v=ZKEqqIO7n-k
 // https://socket.io/docs/v3/emitting-events/
 
-const db = {};
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(consts.oAuth2_client_ID);
+
+// https://developers.google.com/identity/sign-in/web/backend-auth
+async function verify(idToken) {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: idToken,
+      audience: consts.oAuth2_client_ID,
+    });
+    const payload = ticket.getPayload();
+    const userid = payload['sub'];
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 const handler = (req, res) => {
   if (!res.socket.server.io) {
@@ -19,37 +35,19 @@ const handler = (req, res) => {
         const url = `https://www.google.com/recaptcha/api/siteverify?secret=${consts.reCAPTCHA_secret_key}&response=${arg.token}`;
         fetch(url, { method: 'POST' })
           .then((res) => res.json())
-          .then((json) => {
+          .then(async (json) => {
             if (!json.success || json.score <= 0.7)
               console.log(`bot detected with score: ${json.score}`);
             else
               console.log(
                 `${
-                  db[arg.idToken] ? 'logged in' : 'logged out'
+                  (await verify(arg.idToken)) ? 'logged in' : 'logged out'
                 } human click registered with score: ${json.score}`
               );
           });
       });
-      socket.on('googleSignIn', (arg) => {
-        // https://developers.google.com/identity/sign-in/web/backend-auth
-        const { OAuth2Client } = require('google-auth-library');
-        const client = new OAuth2Client(consts.oAuth2_client_ID);
-        async function verify() {
-          const ticket = await client.verifyIdToken({
-            idToken: arg.idToken,
-            audience: consts.oAuth2_client_ID,
-          });
-          const payload = ticket.getPayload();
-          const userid = payload['sub'];
-          db[arg.idToken] = true;
-          console.log(
-            `user logged into google with ID: ${socket.id} ${userid}`
-          );
-        }
-        verify().catch(console.error);
-      });
     });
-    io.on('disconnect', (socket) => {
+    io.on('disconnect', async (socket) => {
       console.log(`disconnected from socket with ID: ${socket.id}`);
     });
 

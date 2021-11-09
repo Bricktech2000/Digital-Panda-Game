@@ -1,6 +1,7 @@
 import React, { Component, useState } from 'react';
 import styles from '../styles/GoogleLoginButton.module.css';
-import consts from '../components/consts';
+import consts from './consts';
+import Button from '../components/Button';
 import GoogleLogin from 'react-google-login';
 
 const GoogleLoginButton = (props) => {
@@ -8,7 +9,6 @@ const GoogleLoginButton = (props) => {
     // console.log(response);
     const idToken = response.tokenId;
     console.log(`logged into Google with ID: ${idToken}`);
-    props.socket.socket.emit('googleSignIn', { idToken: idToken });
     props.onSuccess(idToken);
   };
 
@@ -24,4 +24,15 @@ const GoogleLoginButton = (props) => {
   );
 };
 
-export default GoogleLoginButton;
+const GoogleLogoutButton = (props) => {
+  const onLogOut = () => {
+    var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then(function () {
+      console.log('logged out of Google');
+    });
+    props.onSuccess(null);
+  };
+  return <Button onClick={onLogOut}>Logout</Button>;
+};
+
+export { GoogleLoginButton, GoogleLogoutButton };

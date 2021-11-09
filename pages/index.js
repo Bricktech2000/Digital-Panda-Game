@@ -4,7 +4,10 @@ import NextHead from 'next/head';
 import Button from '../components/Button';
 import consts from '../components/consts';
 import styles from '../styles/index.module.css';
-import GoogleLoginButton from '../components/GoogleLoginButton';
+import {
+  GoogleLoginButton,
+  GoogleLogoutButton,
+} from '../components/GoogleButtons';
 
 import io from 'socket.io-client';
 
@@ -81,9 +84,15 @@ export default () => {
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
         {idToken !== null ? (
-          <Button onClick={updateClicks}>Cookie</Button>
+          <React.Fragment>
+            <Button onClick={updateClicks}>Cookie</Button>
+            <GoogleLogoutButton socket={socket} onSuccess={setIdToken} />
+          </React.Fragment>
         ) : (
-          <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
+          <React.Fragment>
+            <Button onClick={updateClicks}>Cookie</Button>
+            <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
+          </React.Fragment>
         )}
       </div>
     </React.Fragment>
