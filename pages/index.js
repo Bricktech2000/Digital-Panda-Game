@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 import NextHead from 'next/head';
 import Button from '../components/Button';
@@ -8,8 +8,11 @@ import GoogleLoginButton from '../components/GoogleLoginButton';
 
 import io from 'socket.io-client';
 
+var socket = {};
+
 export default () => {
-  var socket = {};
+  const [idToken, setIdToken] = useState(null);
+
   useEffect(() => {
     fetch('/api/socketio').finally(() => {
       socket.socket = io();
@@ -20,13 +23,15 @@ export default () => {
         console.log(`disconnected from socket`);
       });
     });
-  });
+  }, []);
   const updateClicks = () => {
     console.log('click registered');
     grecaptcha.ready(() => {
       grecaptcha
         .execute(consts.reCAPTCHA_site_key, { action: 'updateClicks' })
-        .then((token) => socket.socket.emit('updateClicks', { token: token }));
+        .then((token) =>
+          socket.socket.emit('updateClicks', { token: token, idToken: idToken })
+        );
     });
   };
 
@@ -75,8 +80,11 @@ export default () => {
       <div className={styles.Index}>
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
-        <Button onClick={updateClicks}>Cookie</Button>
-        <GoogleLoginButton socket={socket} />
+        {idToken !== null ? (
+          <Button onClick={updateClicks}>Cookie</Button>
+        ) : (
+          <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
+        )}
       </div>
     </React.Fragment>
   );

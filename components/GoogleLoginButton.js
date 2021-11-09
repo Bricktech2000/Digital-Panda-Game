@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useState } from 'react';
 import styles from '../styles/GoogleLoginButton.module.css';
 import consts from '../components/consts';
 import GoogleLogin from 'react-google-login';
@@ -6,8 +6,10 @@ import GoogleLogin from 'react-google-login';
 const GoogleLoginButton = (props) => {
   const onSignIn = (response) => {
     // console.log(response);
-    console.log(`logged into Google with ID: ${response.tokenId}`);
-    props.socket.socket.emit('googleSignIn', { token: response.tokenId });
+    const idToken = response.tokenId;
+    console.log(`logged into Google with ID: ${idToken}`);
+    props.socket.socket.emit('googleSignIn', { idToken: idToken });
+    props.onSuccess(idToken);
   };
 
   return (
