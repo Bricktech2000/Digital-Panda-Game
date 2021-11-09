@@ -1,8 +1,22 @@
+import { useEffect } from 'react';
 import React from 'react';
 import NextHead from 'next/head';
 import styles from '../styles/index.module.css';
 
-export default function Index() {
+import io from 'socket.io-client';
+
+export default () => {
+  useEffect(() => {
+    fetch('/api/socketio').finally(() => {
+      const socket = io();
+      socket.on('connect', () => {
+        console.log(`connected with ID: ${socket.id}`);
+      });
+      socket.on('disconnect', () => {
+        console.log(`disconnected`);
+      });
+    });
+  });
   return (
     <React.Fragment>
       <NextHead>
@@ -29,10 +43,10 @@ export default function Index() {
           rel="stylesheet"
         />
       </NextHead>
-      <div class={styles.Index}>
+      <div className={styles.Index}>
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
       </div>
     </React.Fragment>
   );
-}
+};
