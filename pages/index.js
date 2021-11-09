@@ -15,26 +15,45 @@ var socket = {};
 
 export default () => {
   const [idToken, setIdToken] = useState(null);
+  const [cookieCount, setCookieCount] = useState(0);
 
   useEffect(() => {
     fetch('/api/socketio').finally(() => {
       socket.socket = io();
       socket.socket.on('connect', () => {
-        console.log(`connected to socket with ID: ${socket.id}`);
+        console.log(`connected to socket: ${socket.socket.id}`);
       });
       socket.socket.on('disconnect', () => {
         console.log(`disconnected from socket`);
       });
+      socket.socket.on('cookie', (arg) => {
+        console.log(
+          `received server cookie count: ${arg.cookieCount} with delta: ${arg.delta}`
+        );
+        setCookieCount((cookies) => cookies + arg.delta);
+        if (arg.delta != 0) {
+          console.log(
+            `client desynced with server, setting absolute client cookie count: ${arg.cookieCount}`
+          );
+          setCookieCount(arg.cookieCount);
+        }
+      });
     });
   }, []);
   const updateClicks = () => {
-    console.log('click registered');
+    setCookieCount((cookies) => cookies + 1);
+    cookieCount++;
+    console.log(`sending client cookie count: ${cookieCount}`);
     grecaptcha.ready(() => {
       grecaptcha
-        .execute(consts.reCAPTCHA_site_key, { action: 'updateClicks' })
-        .then((token) =>
-          socket.socket.emit('updateClicks', { token: token, idToken: idToken })
-        );
+        .execute(consts.reCAPTCHA_site_key, { action: 'cookie' })
+        .then((token) => {
+          socket.socket.emit('cookie', {
+            token: token,
+            idToken: idToken,
+            cookieCount: cookieCount,
+          });
+        });
     });
   };
 
@@ -85,12 +104,12 @@ export default () => {
         <p>An idle game or something</p>
         {idToken !== null ? (
           <React.Fragment>
-            <Button onClick={updateClicks}>Cookie</Button>
+            <Button onClick={updateClicks}>Cookies: {cookieCount}</Button>
             <GoogleLogoutButton socket={socket} onSuccess={setIdToken} />
           </React.Fragment>
         ) : (
           <React.Fragment>
-            <Button onClick={updateClicks}>Cookie</Button>
+            <Button onClick={updateClicks}>Cookies: {cookieCount}</Button>
             <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
           </React.Fragment>
         )}

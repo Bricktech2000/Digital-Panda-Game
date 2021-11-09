@@ -1,56 +1,62 @@
 import { Server } from 'socket.io';
-import consts from '../../components/consts';
+import getUserid from './getUserid';
+import getRecaptchaScore from './getRecaptchaScore';
 // https://stackoverflow.com/questions/57512366/how-to-use-socket-io-with-next-js-api-routes
 // https://www.youtube.com/watch?v=ZKEqqIO7n-k
 // https://socket.io/docs/v3/emitting-events/
+const following = {};
+const cookies = {};
 
-const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(consts.oAuth2_client_ID);
+const incrementCookies = (userid) => {
+  if (cookies[userid] === undefined) cookies[userid] = 0;
+  cookies[userid] += 1;
+};
+const getCookies = (userid) => (userid ? cookies[userid] : 0);
 
-// https://developers.google.com/identity/sign-in/web/backend-auth
-async function verify(idToken) {
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken: idToken,
-      audience: consts.oAuth2_client_ID,
-    });
-    const payload = ticket.getPayload();
-    const userid = payload['sub'];
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
+const follow = (userid, followed) => {
+  following[userid] = followed;
+};
 
 const handler = (req, res) => {
   if (!res.socket.server.io) {
     const io = new Server(res.socket.server);
     io.on('connection', (socket) => {
-      console.log(`connection to socket from ID: ${socket.id}`);
+      console.log(`connection to socket: ${socket.id}`);
       // https://medium.com/@sergeisizov/using-recaptcha-v3-with-node-js-6a4b7bc67209
       // https://developers.google.com/recaptcha/docs/v3
       // https://www.google.com/recaptcha/admin/create
       // https://developers.google.com/recaptcha/docs/verify
-      socket.on('updateClicks', (arg) => {
-        const url = `https://www.google.com/recaptcha/api/siteverify?secret=${consts.reCAPTCHA_secret_key}&response=${arg.token}`;
-        fetch(url, { method: 'POST' })
-          .then((res) => res.json())
-          .then(async (json) => {
-            if (!json.success || json.score <= 0.7)
-              console.log(`bot detected with score: ${json.score}`);
-            else
-              console.log(
-                `${
-                  (await verify(arg.idToken)) ? 'logged in' : 'logged out'
-                } human click registered with score: ${json.score}`
-              );
+      socket.on('cookie', async (arg) => {
+        const score = await getRecaptchaScore(arg.token);
+        const userid = await getUserid(arg.idToken);
+        incrementCookies(userid);
+
+        if (score <= 0.7) console.log(`bot detected with score: ${score}`);
+        else
+          console.log(
+            `user: ${userid} click registered with score: ${score} on socket: ${socket.id}`
+          );
+        setTimeout(() => {
+          const delta = userid
+            ? getCookies(userid) - arg.cookieCount
+            : -arg.cookieCount;
+          console.log(
+            `sending server cookie count: ${getCookies(
+              userid
+            )} with delta: ${delta} to user: ${userid} through socket: ${
+              socket.id
+            }`
+          );
+          io.to(socket.id).emit('cookie', {
+            cookieCount: getCookies(userid),
+            delta: delta,
           });
+        });
       });
     });
     io.on('disconnect', async (socket) => {
       console.log(`disconnected from socket with ID: ${socket.id}`);
     });
-
     res.socket.server.io = io;
   }
   res.end();

@@ -1,5 +1,4 @@
-import React, { Component, useState } from 'react';
-import styles from '../styles/GoogleLoginButton.module.css';
+import styles from '../styles/GoogleButtons.module.css';
 import consts from './consts';
 import Button from '../components/Button';
 import GoogleLogin from 'react-google-login';
