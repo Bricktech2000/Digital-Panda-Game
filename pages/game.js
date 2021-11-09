@@ -31,6 +31,31 @@ const Game = () => {
     
   }
 
+  class Upgrade {
+    constructor(name, multValue, price, priceIncrease){
+      this.name = name;
+      this.multValue = multValue;
+      this.price = price;
+      this.priceIncrease = priceIncrease;
+      this.count = 0
+    };
+  
+    buy() {
+      if (this.price <= cookieTotal) {
+        clickMult += this.multValue;
+        setGrandmaCount(grandmaCount + 1);
+  
+        setGrandmaPrice(grandmaPrice + 1);
+        setCookieTotal(cookieTotal - grandmaPrice);
+  
+        console.log(clickMult);
+      };
+    };
+  };
+
+
+
+
   return (
     <div className={styles.Index}>
       <Button onClick={() => {setCookieTotal((cookieTotal + 1*clickMult))}}>{Math.floor(cookieTotal)}</Button>
