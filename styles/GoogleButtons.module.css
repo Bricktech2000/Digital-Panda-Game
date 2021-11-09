@@ -1,3 +1,4 @@
 .GoogleLoginButton {
   margin: 1em;
+  user-select: none;
 }

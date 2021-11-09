@@ -40,9 +40,11 @@ export default () => {
       });
     });
   }, []);
-  const updateClicks = () => {
-    setCookieCount((cookies) => cookies + 1);
-    cookieCount++;
+
+  const updateClicks = (delta) => {
+    setCookieCount((cookies) => cookies + delta);
+    cookieCount += delta;
+
     console.log(`sending client cookie count: ${cookieCount}`);
     grecaptcha.ready(() => {
       grecaptcha
@@ -56,6 +58,8 @@ export default () => {
         });
     });
   };
+
+  useEffect(() => updateClicks(0), [idToken]);
 
   return (
     <React.Fragment>
@@ -102,16 +106,11 @@ export default () => {
       <div className={styles.Index}>
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
+        <Button onClick={() => updateClicks(1)}>Cookies: {cookieCount}</Button>
         {idToken !== null ? (
-          <React.Fragment>
-            <Button onClick={updateClicks}>Cookies: {cookieCount}</Button>
-            <GoogleLogoutButton socket={socket} onSuccess={setIdToken} />
-          </React.Fragment>
+          <GoogleLogoutButton socket={socket} onSuccess={setIdToken} />
         ) : (
-          <React.Fragment>
-            <Button onClick={updateClicks}>Cookies: {cookieCount}</Button>
-            <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
-          </React.Fragment>
+          <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
         )}
       </div>
     </React.Fragment>
