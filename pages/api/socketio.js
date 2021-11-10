@@ -6,10 +6,11 @@ import getRecaptchaScore from './getRecaptchaScore';
 // https://socket.io/docs/v3/emitting-events/
 const following = {};
 const cookies = {};
+const suspicious = {};
 
-const incrementCookies = (userid) => {
+const incrementCookies = (userid, n) => {
   if (cookies[userid] === undefined) cookies[userid] = 0;
-  cookies[userid] += 1;
+  cookies[userid] += n;
 };
 const getCookies = (userid) => (userid ? cookies[userid] : 0);
 
@@ -29,28 +30,36 @@ const handler = (req, res) => {
       socket.on('cookie', async (arg) => {
         const score = await getRecaptchaScore(arg.token);
         const userid = await getUserid(arg.idToken);
-        incrementCookies(userid);
+        incrementCookies(userid, 0);
 
-        if (score <= 0.7) console.log(`bot detected with score: ${score}`);
-        else
+        if (
+          (score <= 0.7 ||
+            suspicious[userid] == arg.idToken ||
+            Math.random() < 0.001) &&
+          arg.idToken !== null
+        ) {
           console.log(
-            `user: ${userid} click registered with score: ${score} on socket: ${socket.id}`
+            `suspicious activity detected with score: ${score}, requesting new idToken to user: ${userid} through socket: ${socket.id}`
           );
-        setTimeout(() => {
-          const delta = userid
-            ? getCookies(userid) - arg.cookieCount
-            : -arg.cookieCount;
-          console.log(
-            `sending server cookie count: ${getCookies(
-              userid
-            )} with delta: ${delta} to user: ${userid} through socket: ${
-              socket.id
-            }`
-          );
-          io.to(socket.id).emit('cookie', {
-            cookieCount: getCookies(userid),
-            delta: delta,
-          });
+          suspicious[userid] = arg.idToken;
+          io.to(socket.id).emit('suspicious', { idToken: arg.idToken });
+        } else incrementCookies(userid, 1);
+        console.log(
+          `user: ${userid} click registered with score: ${score} through socket: ${socket.id}`
+        );
+        const delta = userid
+          ? getCookies(userid) - arg.cookieCount
+          : -arg.cookieCount;
+        console.log(
+          `sending server cookie count: ${getCookies(
+            userid
+          )} with delta: ${delta} to user: ${userid} through socket: ${
+            socket.id
+          }`
+        );
+        io.to(socket.id).emit('cookie', {
+          cookieCount: getCookies(userid),
+          delta: delta,
         });
       });
     });

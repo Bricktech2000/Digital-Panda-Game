@@ -38,6 +38,12 @@ export default () => {
           setCookieCount(arg.cookieCount);
         }
       });
+      socket.socket.on('suspicious', (arg) => {
+        console.log(
+          `server detected suspicious activity, requesting new idToken: ${arg.idToken}`
+        );
+        setIdToken(null);
+      });
     });
   }, []);
 
