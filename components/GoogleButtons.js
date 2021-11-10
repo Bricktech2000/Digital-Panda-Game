@@ -8,7 +8,7 @@ const GoogleLoginButton = (props) => {
     // console.log(response);
     const idToken = response.tokenId;
     console.log(`logged into Google with ID: ${idToken}`);
-    props.onSuccess(idToken);
+    props.onSuccess(idToken, response.wa);
   };
 
   return (
@@ -29,7 +29,7 @@ const GoogleLogoutButton = (props) => {
     auth2.signOut().then(function () {
       console.log('logged out of Google');
     });
-    props.onSuccess(null);
+    props.onSuccess(null, null);
   };
   return <Button onClick={onLogOut}>Logout</Button>;
 };

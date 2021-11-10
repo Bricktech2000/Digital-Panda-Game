@@ -8,6 +8,7 @@ import {
   GoogleLoginButton,
   GoogleLogoutButton,
 } from '../components/GoogleButtons';
+import { fromB64, toB64 } from './api/base64';
 
 import io from 'socket.io-client';
 
@@ -15,6 +16,7 @@ var socket = {};
 
 export default () => {
   const [idToken, setIdToken] = useState(null);
+  const [userid, setUserid] = useState(null);
   const [cookieCount, setCookieCount] = useState(0);
 
   useEffect(() => {
@@ -65,7 +67,12 @@ export default () => {
     });
   };
 
+  const updateUserid = (userid) => {
+    setUserid(toB64(parseInt(userid, 10)));
+  };
+
   useEffect(() => updateClicks(0), [idToken]);
+  useEffect(() => updateUserid('0'), []);
 
   return (
     <React.Fragment>
@@ -112,11 +119,27 @@ export default () => {
       <div className={styles.Index}>
         <h1>Digital Panda Game</h1>
         <p>An idle game or something</p>
+        <p>
+          Current User ID:&nbsp;&nbsp;
+          <span style={{ fontFamily: 'var(--mono)', fontWeight: 'bold' }}>
+            {userid}
+          </span>
+        </p>
         <Button onClick={() => updateClicks(1)}>Cookies: {cookieCount}</Button>
         {idToken !== null ? (
-          <GoogleLogoutButton socket={socket} onSuccess={setIdToken} />
+          <GoogleLogoutButton
+            socket={socket}
+            onSuccess={(idToken, userid) =>
+              setIdToken(idToken) & updateUserid(userid)
+            }
+          />
         ) : (
-          <GoogleLoginButton socket={socket} onSuccess={setIdToken} />
+          <GoogleLoginButton
+            socket={socket}
+            onSuccess={(idToken, userid) =>
+              setIdToken(idToken) & updateUserid(userid)
+            }
+          />
         )}
       </div>
     </React.Fragment>
