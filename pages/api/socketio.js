@@ -53,13 +53,13 @@ const handler = (req, res) => {
         } else if (userid && delta > 0 && delta < 10)
           incrementCookies(userid, delta);
 
-        console.log(
-          `user: ${userid} click registered with score: ${score} through socket: ${socket.id}`
-        );
+        // console.log(
+        // `user: ${userid} click registered with score: ${score} through socket: ${socket.id}`
+        // );
         delta = getCookies(userid) - arg.cookieCount;
-        console.log(
-          `sending server cookie delta: ${delta} to user: ${userid} through socket: ${socket.id}`
-        );
+        // console.log(
+        // `sending server cookie delta: ${delta} to user: ${userid} through socket: ${socket.id}`
+        // );
         io.to(socket.id).emit('cookie', {
           delta: delta,
         });

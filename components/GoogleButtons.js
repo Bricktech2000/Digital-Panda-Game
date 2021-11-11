@@ -14,11 +14,8 @@ const GoogleLoginButton = (props) => {
   };
 
   useEffect(() => {
-    console.log(localStorage.getItem('GoogleResponse'));
-    if (localStorage.getItem('GoogleResponse') !== null) {
+    if (localStorage.getItem('GoogleResponse') !== null)
       onSignIn(JSON.parse(localStorage.getItem('GoogleResponse')));
-      // console.log("signed in with saved google info");
-    }
   }, []);
 
   return (

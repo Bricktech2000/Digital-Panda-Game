@@ -34,7 +34,7 @@ export default () => {
         console.log(`disconnected from socket`);
       });
       socket.socket.on('cookie', (arg) => {
-        console.log(`received server cookie delta: ${arg.delta}`);
+        // console.log(`received server cookie delta: ${arg.delta}`);
         if (arg.delta != 0) {
           console.log(
             `client desynced with server, using client cookie delta: ${arg.delta}`
@@ -58,9 +58,9 @@ export default () => {
       grecaptcha
         .execute(consts.reCAPTCHA_site_key, { action: 'cookie' })
         .then((token) => {
-          console.log(
-            `sending client cookie count: ${cookieCountRef} with reCAPTCHA token`
-          );
+          // console.log(
+          // `sending client cookie count: ${cookieCountRef} with reCAPTCHA token`
+          // );
           socket.socket.emit('cookie', {
             token: token,
             idToken: idTokenRef,
