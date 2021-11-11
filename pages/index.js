@@ -79,7 +79,6 @@ export default () => {
   };
 
   useEffect(() => updateClicks(0), [idToken]);
-  useEffect(() => updateUserid('0'), []);
   useEffect(() => sendCookieCount(), []);
 
   return (
