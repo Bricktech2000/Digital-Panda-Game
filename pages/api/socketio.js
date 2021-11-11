@@ -18,6 +18,12 @@ const follow = (userid, followed) => {
   following[userid] = followed;
 };
 
+setInterval(() => {
+  for (var userid of Object.keys(cookies)) {
+    cookies[userid] += 1;
+  }
+}, 500);
+
 const handler = (req, res) => {
   if (!res.socket.server.io) {
     const io = new Server(res.socket.server);
@@ -30,6 +36,7 @@ const handler = (req, res) => {
       socket.on('cookie', async (arg) => {
         const score = await getRecaptchaScore(arg.token);
         const userid = await getUserid(arg.idToken);
+        var delta = arg.cookieCount - getCookies(userid);
         incrementCookies(userid, 0);
 
         if (
@@ -43,22 +50,17 @@ const handler = (req, res) => {
           );
           suspicious[userid] = arg.idToken;
           io.to(socket.id).emit('suspicious', { idToken: arg.idToken });
-        } else incrementCookies(userid, 1);
+        } else if (userid && delta > 0 && delta < 10)
+          incrementCookies(userid, delta);
+
         console.log(
           `user: ${userid} click registered with score: ${score} through socket: ${socket.id}`
         );
-        const delta = userid
-          ? getCookies(userid) - arg.cookieCount
-          : -arg.cookieCount;
+        delta = getCookies(userid) - arg.cookieCount;
         console.log(
-          `sending server cookie count: ${getCookies(
-            userid
-          )} with delta: ${delta} to user: ${userid} through socket: ${
-            socket.id
-          }`
+          `sending server cookie delta: ${delta} to user: ${userid} through socket: ${socket.id}`
         );
         io.to(socket.id).emit('cookie', {
-          cookieCount: getCookies(userid),
           delta: delta,
         });
       });

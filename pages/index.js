@@ -13,11 +13,16 @@ import { fromB64, toB64 } from './api/base64';
 import io from 'socket.io-client';
 
 var socket = {};
+const cookieCountRef = 0;
+const idTokenRef = 0;
 
 export default () => {
   const [idToken, setIdToken] = useState(null);
   const [userid, setUserid] = useState(null);
   const [cookieCount, setCookieCount] = useState(0);
+  //that's  evil
+  useEffect(() => (cookieCountRef = cookieCount), [cookieCount]);
+  useEffect(() => (idTokenRef = idToken), [idToken]);
 
   useEffect(() => {
     fetch('/api/socketio').finally(() => {
@@ -29,42 +34,44 @@ export default () => {
         console.log(`disconnected from socket`);
       });
       socket.socket.on('cookie', (arg) => {
-        console.log(
-          `received server cookie count: ${arg.cookieCount} with delta: ${arg.delta}`
-        );
-        setCookieCount((cookies) => cookies + arg.delta);
+        console.log(`received server cookie delta: ${arg.delta}`);
         if (arg.delta != 0) {
           console.log(
-            `client desynced with server, setting absolute client cookie count: ${arg.cookieCount}`
+            `client desynced with server, using client cookie delta: ${arg.delta}`
           );
-          setCookieCount(arg.cookieCount);
         }
+
+        setTimeout(() => sendCookieCount(), 250);
+        setCookieCount((cookies) => cookies + arg.delta);
       });
       socket.socket.on('suspicious', (arg) => {
         console.log(
-          `server detected suspicious activity, requesting new idToken: ${arg.idToken}`
+          `server detected suspicious activity, requested new idToken`
         );
         setIdToken(null);
       });
     });
   }, []);
 
-  const updateClicks = (delta) => {
-    setCookieCount((cookies) => cookies + delta);
-    cookieCount += delta;
-
-    console.log(`sending client cookie count: ${cookieCount}`);
+  const sendCookieCount = () => {
     grecaptcha.ready(() => {
       grecaptcha
         .execute(consts.reCAPTCHA_site_key, { action: 'cookie' })
         .then((token) => {
+          console.log(
+            `sending client cookie count: ${cookieCountRef} with reCAPTCHA token`
+          );
           socket.socket.emit('cookie', {
             token: token,
-            idToken: idToken,
-            cookieCount: cookieCount,
+            idToken: idTokenRef,
+            cookieCount: cookieCountRef,
           });
         });
     });
+  };
+
+  const updateClicks = (delta) => {
+    setCookieCount((cookies) => cookies + delta);
   };
 
   const updateUserid = (userid) => {
@@ -73,6 +80,7 @@ export default () => {
 
   useEffect(() => updateClicks(0), [idToken]);
   useEffect(() => updateUserid('0'), []);
+  useEffect(() => sendCookieCount(), []);
 
   return (
     <React.Fragment>
