@@ -19,7 +19,7 @@ const follow = (userid, followed) => {
 };
 
 setInterval(() => {
-  for (var userid of Object.keys(cookies)) {
+  for (let userid of Object.keys(cookies)) {
     cookies[userid] += 1;
   }
 }, 500);
@@ -36,7 +36,7 @@ const handler = (req, res) => {
       socket.on('cookie', async (arg) => {
         const score = await getRecaptchaScore(arg.token);
         const userid = await getUserid(arg.idToken);
-        var delta = arg.cookieCount - getCookies(userid);
+        let delta = arg.cookieCount - getCookies(userid);
         incrementCookies(userid, 0);
 
         if (

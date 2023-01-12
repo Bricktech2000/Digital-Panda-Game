@@ -12,7 +12,7 @@ import { fromB64, toB64 } from './api/base64';
 
 import io from 'socket.io-client';
 
-var socket = {};
+let socket = {};
 const cookieCountRef = 0;
 const idTokenRef = 0;
 
